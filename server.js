@@ -61,17 +61,19 @@ app.get("/scrape", function(req, res) {
     var $ = cheerio.load(response.data);
 
     // Now, we grab every h2 within an article tag, and do the following:
-    $(".lead-story h3").each(function(i, element) {
+    $(".WSJTheme--headline--19_2KfxG").each(function(i, element) {
       // Save an empty result object
       var result = {};
       // var results = {data:[]};
       // Add the text and href of every link, and save them as properties of the result object
+      // console.log($(this));
       result.title = $(this)
         .children("a")
         .text();
       result.link = $(this)
         .children("a")
         .attr("href");
+      // TODO retrieve image
 
       // Create a new Article using the `result` object built from scraping
       db.Article.create(result)
@@ -89,7 +91,8 @@ app.get("/scrape", function(req, res) {
     });
 
     // Send a message to the client
-    res.send("Scrape Complete!");
+    // res.send("Scrape Complete!");
+    res.redirect("/");
     // res.render("index", results);
   });
 });
@@ -116,31 +119,31 @@ app.get("/articles", function(req, res) {
     });
 
 //save article
-app.post("/save_article", function(req, res){
+app.get("/saved", function(req, res){
 //do stuff send article _id
-
+// res.render("saved")
 //eigther update existing article table, set value true /false to figure out this article is saved or not
 //or
 //create new table called 'saved_article' to keep track of saved article
 
-Article
-.find({})
-.where('saved').equals(true)
-.where('deleted').equals(false)
-.populate('notes')
-.sort('-date')
+db.Article
+.find({saved: true})
+// .where('saved').equals(true)
+// .where('deleted').equals(false)
+// .populate('notes')
+// .sort('-date')
 .exec(function(error, articles) {
     if (error) {
         console.log(error);
         res.status(500);
     } else {
         console.log(articles);
-        let hbsObj = {
-            title: 'All the News That\'s Fit to Scrape',
-            subtitle: 'Saved Hacker News',
-            articles: articles
-        };
-        res.render("saved" ,hbsObj);
+        // let hbsObj = {
+        //     title: 'All the News That\'s Fit to Scrape',
+        //     subtitle: 'Saved Hacker News',
+        //     articles: articles
+        // };
+        res.render("saved" ,{items:articles});
     }
 });
 })
@@ -183,7 +186,7 @@ app.post("/articles/:id", function(req, res) {
   //     // If an error occurs, send it back to the client
   //     res.json(err);
   //   });
-  Article.findByIdAndUpdate(req.params.id, {
+  db.Article.findByIdAndUpdate(req.params.id, {
     $set: { saved: true}
     },
     { new: true },
