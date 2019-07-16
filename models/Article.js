@@ -10,6 +10,10 @@ var ArticleSchema = new Schema({
     type: String,
     required: false
   },
+  img: {
+    type: String,
+    required: false
+  },
   saved: {
     type: Boolean,
     default: false

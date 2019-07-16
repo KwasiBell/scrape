@@ -4,7 +4,7 @@ var mongoose = require("mongoose");
 var exphbs = require("express-handlebars");
 var axios = require("axios");
 var cheerio = require("cheerio");
-
+var MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost/mongoHeadlines";
 // Require all models
 var db = require("./models");
 
@@ -60,34 +60,47 @@ app.get("/scrape", function(req, res) {
     // Then, we load that into cheerio and save it to $ for a shorthand selector
     var $ = cheerio.load(response.data);
 
+
     // Now, we grab every h2 within an article tag, and do the following:
-    $(".WSJTheme--headline--19_2KfxG").each(function(i, element) {
-      // Save an empty result object
-      var result = {};
-      // var results = {data:[]};
-      // Add the text and href of every link, and save them as properties of the result object
-      // console.log($(this));
-      result.title = $(this)
-        .children("a")
-        .text();
-      result.link = $(this)
-        .children("a")
-        .attr("href");
-      // TODO retrieve image
+    $(".WSJTheme--story--pKzwqDTt").each(function(i, element) {
 
-      // Create a new Article using the `result` object built from scraping
-      db.Article.create(result)
-        .then(function(dbArticle) {
-          //  results.data.push(result);
-          // View the added result in the console
-          console.log(result);
+      if($(this).find('.WSJTheme--image--1S9F92IF').find('img').attr("src")!=""
+      && $(this).find('.WSJTheme--image--1S9F92IF').find('img').attr("src") != undefined){// Article with Image
+        // console.log($(this).find('.WSJTheme--image--1S9F92IF').find('img').attr("src"));
+        // console.log("==========================");
+        // Save an empty result object
+        var result = {};
+        // var results = {data:[]};
+        // Add the text and href of every link, and save them as properties of the result object
+        // console.log($(this));
+        result.title = $(this).find('.WSJTheme--headline--19_2KfxG')
+          .children("a")
+          .text();
+        result.link = $(this).find('.WSJTheme--headline--19_2KfxG')
+          .children("a")
+          .attr("href");
+        result.img = $(this).find('.WSJTheme--image--1S9F92IF')
+          .find('img')
+          .attr("src");
+        // TODO retrieve image
+        // console.log(result);
+        // Create a new Article using the `result` object built from scraping
+        db.Article.create(result)
+          .then(function(dbArticle) {
+            //  results.data.push(result);
+            // View the added result in the console
+            //console.log(result);
 
-        })
-        .catch(function(err) {
-          // If an error occurred, log it
-          console.log(err);
+          })
+          .catch(function(err) {
+            // If an error occurred, log it
+            console.log(err);
 
-        });
+          });
+      }else{// No IMAGE
+        //Don't save into DB
+      }
+
     });
 
     // Send a message to the client
